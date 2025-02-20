@@ -3,34 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>V2 attire</title>
+    <title>V2 Attire</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <header>
-        <div class="logo">V2 attire</div>
+        <a href="product.html?id=1">View Product</a>
+
+        <div class="logo">V2 Attire</div>
+        
         <div class="search-bar">
             <input type="text" id="search" placeholder="Search dresses...">
             <button onclick="searchProducts()">Search</button>
         </div>
+
         <div class="cart">
             <a href="cart.html">
                 <span id="cart-count">0</span>
-                <img src="images/cart-icon.png" alt="Cart">
+                <img src="https://cdn-icons-png.flaticon.com/128/1170/1170678.png" alt="Cart">
             </a>
         </div>
-        
-    </header>
+
+        <div class="login">
+            <a href="login.html">
+                <img src="https://cdn-icons-png.flaticon.com/128/456/456212.png" alt="User Login">
+            </a>
+        </div>
 
     <main>
         <section class="filters">
-            <select id="filter">
+            <select id="filter" onchange="filterProducts()">
                 <option value="all">All</option>
                 <option value="casual">Casual</option>
                 <option value="party">Party</option>
                 <option value="wedding">Wedding</option>
             </select>
-            <select id="sort">
+            <select id="sort" onchange="sortProducts()">
                 <option value="price-asc">Price: Low to High</option>
                 <option value="price-desc">Price: High to Low</option>
                 <option value="name-asc">Name: A to Z</option>

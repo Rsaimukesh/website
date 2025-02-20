@@ -1,3 +1,128 @@
+class Product {
+    constructor(id, name, price, category, image, description = '', stock = 10) {
+        this.id = id;
+        this.name = name;
+        this.price = price;
+        this.category = category;
+        this.image = image;
+        this.description = description;
+        this.stock = stock;
+    }
+}
+
+class ShoppingCart {
+    constructor() {
+        this.items = this.loadCart();
+    }
+
+    loadCart() {
+        return JSON.parse(localStorage.getItem('cart')) || [];
+    }
+
+    saveCart() {
+        localStorage.setItem('cart', JSON.stringify(this.items));
+        this.updateCartCount();
+    }
+
+    addItem(productId, quantity = 1) {
+        const product = products.find(p => p.id === productId);
+        if (!product) return;
+
+        const existingItem = this.items.find(item => item.id === productId);
+        if (existingItem) {
+            existingItem.quantity += quantity;
+        } else {
+            this.items.push({ ...product, quantity });
+        }
+
+        this.saveCart();
+        this.showNotification('Product added to cart!');
+    }
+
+    updateCartCount() {
+        const cartCount = document.getElementById('cart-count');
+        if (cartCount) {
+            cartCount.textContent = this.items.reduce((total, item) => total + item.quantity, 0);
+        }
+    }
+
+    showNotification(message) {
+        const notification = document.createElement('div');
+        notification.className = 'notification';
+        notification.textContent = message;
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
+    }
+}
+
+class ProductList {
+    constructor(products) {
+        this.products = products.map(p => new Product(p.id, p.name, p.price, p.category, p.image, p.description));
+        this.filteredProducts = [...this.products];
+    }
+
+    renderProducts() {
+        const productList = document.getElementById('product-list');
+        if (!productList) return;
+        productList.innerHTML = '';
+
+        this.filteredProducts.forEach(product => {
+            const productCard = document.createElement('div');
+            productCard.className = 'product-card';
+            productCard.innerHTML = `
+                <img src="${product.image}" alt="${product.name}" 
+                     onclick="window.location.href='product.html?id=${product.id}'">
+                <h3>${product.name}</h3>
+                <p>$${product.price.toFixed(2)}</p>
+                <div class="product-actions">
+                    <input type="number" min="1" max="${product.stock}" value="1" id="quantity-${product.id}">
+                    <button data-id="${product.id}">Add to Cart</button>
+                </div>
+            `;
+            productList.appendChild(productCard);
+        });
+
+        // Attach event listeners for "Add to Cart" buttons
+        document.querySelectorAll('.product-card button').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const productId = parseInt(e.target.getAttribute('data-id'));
+                const quantity = parseInt(document.getElementById(`quantity-${productId}`).value);
+                cart.addItem(productId, quantity);
+            });
+        });
+    }
+
+    filterProducts(category, searchTerm = '') {
+        this.filteredProducts = this.products
+            .filter(product => 
+                (category === 'all' || product.category === category) &&
+                product.name.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+        this.renderProducts();
+    }
+
+    sortProducts(sortType) {
+        switch (sortType) {
+            case 'price-asc':
+                this.filteredProducts.sort((a, b) => a.price - b.price);
+                break;
+            case 'price-desc':
+                this.filteredProducts.sort((a, b) => b.price - a.price);
+                break;
+            case 'name-asc':
+                this.filteredProducts.sort((a, b) => a.name.localeCompare(b.name));
+                break;
+            case 'name-desc':
+                this.filteredProducts.sort((a, b) => b.name.localeCompare(a.name));
+                break;
+        }
+        this.renderProducts();
+    }
+}
+
 // Sample product data
 const products = [
     { id: 1, name: "Black Casual Dress", price: 50, category: "casual", image: "sample.png" },
@@ -22,90 +147,23 @@ const products = [
     { id: 20, name: "Polka Dot Dress", price: 55, category: "casual", image: "polaka.png" },
 ];
 
-let cart = [];
+// Initialize cart and product list
+const cart = new ShoppingCart();
+const productList = new ProductList(products);
 
-// Render products
-function renderProducts(productsToRender) {
-    const productList = document.getElementById("product-list");
-    productList.innerHTML = "";
+document.addEventListener('DOMContentLoaded', () => {
+    productList.renderProducts();
+    cart.updateCartCount();
 
-    productsToRender.forEach(product => {
-        const productCard = document.createElement("div");
-        productCard.className = "product-card";
-        productCard.innerHTML = `
-            <img src="${product.image}" alt="${product.name}">
-            <h3>${product.name}</h3>
-            <p>$${product.price}</p>
-            <button onclick="addToCart(${product.id})">Add to Cart</button>
-        `;
-        productList.appendChild(productCard);
+    document.getElementById('filter').addEventListener('change', (e) => {
+        productList.filterProducts(e.target.value, document.getElementById('search').value);
     });
-}
 
-// Add to cart
-function addToCart(productId) {
-    const product = products.find(p => p.id === productId);
-    cart.push(product);
-    updateCartCount();
-    saveCartToLocalStorage();
-}
+    document.getElementById('sort').addEventListener('change', (e) => {
+        productList.sortProducts(e.target.value);
+    });
 
-// Save cart to localStorage
-function saveCartToLocalStorage() {
-    localStorage.setItem("cart", JSON.stringify(cart));
-}
-
-// Load cart from localStorage
-function loadCartFromLocalStorage() {
-    const savedCart = JSON.parse(localStorage.getItem("cart")) || [];
-    cart = savedCart;
-    updateCartCount();
-}
-
-// Update cart count
-function updateCartCount() {
-    const cartCount = document.getElementById("cart-count");
-    cartCount.textContent = cart.length;
-}
-
-// Search products
-function searchProducts() {
-    const searchTerm = document.getElementById("search").value.toLowerCase();
-    const filteredProducts = products.filter(product => 
-        product.name.toLowerCase().includes(searchTerm)
-    );
-    renderProducts(filteredProducts);
-}
-
-// Filter products
-document.getElementById("filter").addEventListener("change", (e) => {
-    const category = e.target.value;
-    const filteredProducts = category === "all" 
-        ? products 
-        : products.filter(product => product.category === category);
-    renderProducts(filteredProducts);
+    document.getElementById('search').addEventListener('input', (e) => {
+        productList.filterProducts(document.getElementById('filter').value, e.target.value);
+    });
 });
-
-// Sort products
-document.getElementById("sort").addEventListener("change", (e) => {
-    const sortValue = e.target.value;
-    let sortedProducts = [...products];
-
-    if (sortValue === "price-asc") {
-        sortedProducts.sort((a, b) => a.price - b.price);
-    } else if (sortValue === "price-desc") {
-        sortedProducts.sort((a, b) => b.price - a.price);
-    } else if (sortValue === "name-asc") {
-        sortedProducts.sort((a, b) => a.name.localeCompare(b.name));
-    } else if (sortValue === "name-desc") {
-        sortedProducts.sort((a, b) => b.name.localeCompare(a.name));
-    }
-
-    renderProducts(sortedProducts);
-});
-
-// Load cart when the page loads
-window.onload = () => {
-    loadCartFromLocalStorage();
-    renderProducts(products);
-};
