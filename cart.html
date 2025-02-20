@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cart - your cart</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="logo">V2 attire</div>
+        <div class="cart" onclick="window.location.href='index.html'">
+            <span id="cart-count">0</span>
+            <img src="images/cart-icon.png" alt="Cart">
+        </div>
+    </header>
+
+    <main>
+        <h1>Your Cart</h1>
+        <section class="cart-items" id="cart-items">
+            <!-- Cart items will be dynamically added here -->  
+        </section>
+        <div class="cart-total">
+            <h3>Total: $<span id="total-price">0</span></h3>
+            <button onclick="checkout()">Checkout</button>
+        </div>
+    </main>
+
+    <script>
+        // Load cart items from localStorage
+        const cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+        // Render cart items
+        const cartItemsContainer = document.getElementById("cart-items");
+        let totalPrice = 0;
+
+        cart.forEach(item => {
+            const cartItem = document.createElement("div");
+            cartItem.className = "cart-item";
+            cartItem.innerHTML = `
+                <img src="${item.image}" alt="${item.name}">
+                <div>
+                    <h3>${item.name}</h3>
+                    <p>$${item.price}</p>
+                </div>
+            `;
+            cartItemsContainer.appendChild(cartItem);
+            totalPrice += item.price;
+        });
+
+        // Display total price
+        document.getElementById("total-price").textContent = totalPrice.toFixed(2);
+
+        // Update cart count
+        document.getElementById("cart-count").textContent = cart.length;
+
+        // Checkout function
+        function checkout() {
+            alert("Thank you for your purchase!");
+            localStorage.removeItem("cart");
+            window.location.href = "index.html";
+        }
+    </script>
+</body>
+</html>

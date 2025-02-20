@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - V2 Attire</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="logo">V2 attire</div>
+        <a href="cart.html">Back to Cart</a>
+    </header>
+
+    <main>
+        <h1>Checkout</h1>
+        <section id="checkout-items"></section>
+        <h3>Total: $<span id="checkout-total">0</span></h3>
+        <button onclick="confirmPurchase()">Confirm Purchase</button>
+    </main>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const cart = JSON.parse(localStorage.getItem("checkoutCart")) || [];
+            const checkoutItemsContainer = document.getElementById("checkout-items");
+            let total = 0;
+
+            cart.forEach(item => {
+                const itemElement = document.createElement("div");
+                itemElement.innerHTML = `
+                    <img src="${item.image}" alt="${item.name}">
+                    <h3>${item.name}</h3>
+                    <p>Price: $${item.price} x ${item.quantity}</p>
+                `;
+                checkoutItemsContainer.appendChild(itemElement);
+                total += item.price * item.quantity;
+            });
+
+            document.getElementById("checkout-total").textContent = total.toFixed(2);
+        });
+
+        function confirmPurchase() {
+            alert("Thank you for your purchase!");
+            localStorage.removeItem("checkoutCart");
+            localStorage.removeItem("cart");
+            window.location.href = "index.html";
+        }
+    </script>
+</body>
+</html>
