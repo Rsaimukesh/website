@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Login & Register</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.8.0/firebase-app-compat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.8.0/firebase-auth-compat.min.js"></script>
     <style>
-        /* General Styles */
         * {
             margin: 0;
             padding: 0;
@@ -22,14 +24,12 @@
             color: white;
         }
 
-        /* Container */
         .container {
             width: 100%;
             max-width: 900px;
             padding: 2rem;
         }
 
-        /* Form Wrapper */
         .form-wrapper {
             position: relative;
             width: 100%;
@@ -41,22 +41,16 @@
             overflow: hidden;
         }
 
-        /* Forms Container */
-        .forms-container {
-            display: flex;
-            width: 200%;
-            transition: transform 0.6s ease-in-out;
-        }
-
-        /* Individual Form */
         .form {
-            width: 50%;
+            width: 100%;
             padding: 3rem 2.5rem;
+            display: none;
             opacity: 0;
             transition: opacity 0.4s ease;
         }
 
         .form.active {
+            display: block;
             opacity: 1;
         }
 
@@ -93,7 +87,6 @@
             color: #888;
         }
 
-        /* Button Styles */
         .form-button {
             width: 100%;
             padding: 1rem;
@@ -107,15 +100,23 @@
             transition: all 0.3s ease;
             text-transform: uppercase;
             letter-spacing: 1px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
         }
 
-        .form-button:hover {
+        .form-button:hover:not(:disabled) {
             background: #ff4500;
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(255,105,0,0.3);
         }
 
-        /* Toggle Links */
+        .form-button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
         .toggle-links {
             text-align: center;
             margin-top: 1.5rem;
@@ -126,6 +127,8 @@
             text-decoration: none;
             font-size: 0.9rem;
             transition: color 0.3s ease;
+            display: inline-block;
+            margin: 5px;
         }
 
         .toggle-links a:hover {
@@ -133,17 +136,51 @@
             text-decoration: underline;
         }
 
-        /* Animation Classes */
-        .slide-right {
-            transform: translateX(-50%);
+        .error-message {
+            color: #ff4444;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            display: none;
+            text-align: center;
+        }
+
+        .error-message.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .success-message {
+            color: #44ff44;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            display: none;
+            text-align: center;
+        }
+
+        .success-message.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .loading-spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
+            from { opacity: 0; transform: translateY(-10px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Responsive Design */
         @media (max-width: 768px) {
             .form {
                 padding: 2rem 1.5rem;
@@ -158,72 +195,257 @@
 <body>
     <div class="container">
         <div class="form-wrapper">
-            <div class="forms-container">
-                <!-- Login Form -->
-                <form class="form login-form active" id="login-form">
-                    <h2>Welcome Back</h2>
-                    <div class="form-input-group">
-                        <input type="text" placeholder="Username" required>
-                    </div>
-                    <div class="form-input-group">
-                        <input type="password" placeholder="Password" required>
-                    </div>
-                    <button type="submit" class="form-button">Sign In</button>
-                    <div class="toggle-links">
-                        <a href="#" id="go-to-register">New user? Create account</a><br>
-                        <a href="#">Forgot password?</a>
-                    </div>
-                </form>
+            <!-- Login Form -->
+            <form class="form login-form active" id="login-form">
+                <h2>Welcome Back</h2>
+                <div class="form-input-group">
+                    <input type="email" placeholder="Email" required>
+                </div>
+                <div class="form-input-group">
+                    <input type="password" placeholder="Password" required>
+                </div>
+                <button type="submit" class="form-button">
+                    Sign In
+                    <div class="loading-spinner"></div>
+                </button>
+                <div class="toggle-links">
+                    <a href="#" id="go-to-register">New user? Create account</a>
+                    <a href="#" id="forgot-password">Forgot password?</a>
+                </div>
+                <div class="error-message"></div>
+                <div class="success-message"></div>
+            </form>
 
-                <!-- Register Form -->
-                <form class="form register-form" id="register-form">
-                    <h2>Create Account</h2>
-                    <div class="form-input-group">
-                        <input type="text" placeholder="Username" required>
-                    </div>
-                    <div class="form-input-group">
-                        <input type="email" placeholder="Email" required>
-                    </div>
-                    <div class="form-input-group">
-                        <input type="password" placeholder="Password" required>
-                    </div>
-                    <button type="submit" class="form-button">Register Now</button>
-                    <div class="toggle-links">
-                        <a href="#" id="go-to-login">Already registered? Sign In</a>
-                    </div>
-                </form>
-            </div>
+            <!-- Register Form -->
+            <form class="form register-form" id="register-form">
+                <h2>Create Account</h2>
+                <div class="form-input-group">
+                    <input type="text" placeholder="Username" required>
+                </div>
+                <div class="form-input-group">
+                    <input type="email" placeholder="Email" required>
+                </div>
+                <div class="form-input-group">
+                    <input type="password" placeholder="Password" required minlength="6">
+                </div>
+                <button type="submit" class="form-button">
+                    Register Now
+                    <div class="loading-spinner"></div>
+                </button>
+                <div class="toggle-links">
+                    <a href="#" id="go-to-login">Already registered? Sign In</a>
+                </div>
+                <div class="error-message"></div>
+                <div class="success-message"></div>
+            </form>
         </div>
     </div>
 
     <script>
-        const formsContainer = document.querySelector('.forms-container');
-        const loginForm = document.getElementById('login-form');
-        const registerForm = document.getElementById('register-form');
-        const goToRegister = document.getElementById('go-to-register');
-        const goToLogin = document.getElementById('go-to-login');
+        // Firebase configuration
+        const firebaseConfig = {
+        apiKey: "AIzaSyD3Csb21LfUoYJg5qtRAgpbJMBRsrLGCcg",
+        authDomain: "dbweb-5f407.firebaseapp.com",
+        projectId: "dbweb-5f407",
+        storageBucket: "dbweb-5f407.firebasestorage.app",
+        messagingSenderId: "1062949023172",
+        appId: "1:1062949023172:web:f7b7ab48aa6fb9028d4891",
+        measurementId: "G-7DH67SL7EW"
+        };  
 
-        // Handle form toggle
-        function toggleForm(isRegister) {
-            formsContainer.classList.toggle('slide-right', isRegister);
-            loginForm.classList.toggle('active', !isRegister);
-            registerForm.classList.toggle('active', isRegister);
+        // Initialize Firebase with error handling
+        let auth;
+        try {
+            firebase.initializeApp(firebaseConfig);
+            auth = firebase.auth();
+            console.log('Firebase initialized successfully');
+        } catch (error) {
+            console.error('Firebase initialization error:', error);
         }
 
-        // Event listeners
-        goToRegister.addEventListener('click', (e) => {
-            e.preventDefault();
-            toggleForm(true);
-        });
+        // DOM Elements
+        const elements = {
+            loginForm: document.getElementById('login-form'),
+            registerForm: document.getElementById('register-form'),
+            goToRegister: document.getElementById('go-to-register'),
+            goToLogin: document.getElementById('go-to-login'),
+            forgotPassword: document.getElementById('forgot-password')
+        };
 
-        goToLogin.addEventListener('click', (e) => {
-            e.preventDefault();
-            toggleForm(false);
-        });
+        // Helper Functions
+        const helpers = {
+            showMessage(form, message, isError = true) {
+                const messageDiv = form.querySelector(isError ? '.error-message' : '.success-message');
+                const otherDiv = form.querySelector(isError ? '.success-message' : '.error-message');
+                
+                otherDiv.classList.remove('active');
+                messageDiv.textContent = message;
+                messageDiv.classList.add('active');
+            },
 
-        // Add initial animations
-        document.querySelectorAll('.form-input-group').forEach((item, index) => {
-            item.style.animation = `fadeIn 0.5s ease forwards ${index * 0.2}s`;
+            setLoading(form, isLoading) {
+                const button = form.querySelector('.form-button');
+                const spinner = form.querySelector('.loading-spinner');
+                
+                button.disabled = isLoading;
+                spinner.style.display = isLoading ? 'inline-block' : 'none';
+            },
+
+            toggleForms(showRegister) {
+                const loginForm = elements.loginForm;
+                const registerForm = elements.registerForm;
+
+                if (showRegister) {
+                    loginForm.classList.remove('active');
+                    registerForm.classList.add('active');
+                } else {
+                    registerForm.classList.remove('active');
+                    loginForm.classList.add('active');
+                }
+
+                // Clear forms and messages
+                [loginForm, registerForm].forEach(form => {
+                    form.reset();
+                    form.querySelector('.error-message').classList.remove('active');
+                    form.querySelector('.success-message').classList.remove('active');
+                });
+            },
+
+            validatePassword(password) {
+                return password.length >= 6;
+            }
+        };
+
+        // Event Handlers
+        const handlers = {
+            async handleLogin(e) {
+                e.preventDefault();
+                const form = elements.loginForm;
+                const email = form.querySelector('input[type="email"]').value;
+                const password = form.querySelector('input[type="password"]').value;
+
+                try {
+                    helpers.setLoading(form, true);
+                    const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                    
+                    if (!userCredential.user.emailVerified) {
+                        await auth.signOut();
+                        helpers.showMessage(form, 'Please verify your email before logging in. Check your inbox.');
+                        return;
+                    }
+
+                    helpers.showMessage(form, 'Login successful! Redirecting...', false);
+                    setTimeout(() => {
+                        window.location.href = '/dashboard.html';
+                    }, 1500);
+
+                } catch (error) {
+                    let errorMessage = 'Login failed. Please check your credentials.';
+                    switch (error.code) {
+                        case 'auth/user-not-found':
+                            errorMessage = 'No account found with this email.';
+                            break;
+                        case 'auth/wrong-password':
+                            errorMessage = 'Incorrect password.';
+                            break;
+                        case 'auth/invalid-email':
+                            errorMessage = 'Invalid email format.';
+                            break;
+                        case 'auth/user-disabled':
+                            errorMessage = 'This account has been disabled.';
+                            break;
+                    }
+                    helpers.showMessage(form, errorMessage);
+                } finally {
+                    helpers.setLoading(form, false);
+                }
+            },
+
+            async handleRegister(e) {
+                e.preventDefault();
+                const form = elements.registerForm;
+                const username = form.querySelector('input[type="text"]').value;
+                const email = form.querySelector('input[type="email"]').value;
+                const password = form.querySelector('input[type="password"]').value;
+
+                if (!helpers.validatePassword(password)) {
+                    helpers.showMessage(form, 'Password must be at least 6 characters long.');
+                    return;
+                }
+
+                try {
+                    helpers.setLoading(form, true);
+                    
+                    const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                    await userCredential.user.updateProfile({ displayName: username });
+                    await userCredential.user.sendEmailVerification();
+                    
+                    helpers.showMessage(form, 'Registration successful! Please check your email to verify your account.', false);
+                    await auth.signOut();
+                    
+                    setTimeout(() => {
+                        helpers.toggleForms(false);
+                    }, 3000);
+
+                } catch (error) {
+                    let errorMessage = 'Registration failed.';
+                    switch (error.code) {
+                        case 'auth/email-already-in-use':
+                            errorMessage = 'This email is already registered.';
+                            break;
+                        case 'auth/invalid-email':
+                            errorMessage = 'Invalid email format.';
+                            break;
+                        case 'auth/weak-password':
+                            errorMessage = 'Password should be at least 6 characters.';
+                            break;
+                    }
+                    helpers.showMessage(form, errorMessage);
+                } finally {
+                    helpers.setLoading(form, false);
+                }
+            },
+
+            async handleForgotPassword(e) {
+                e.preventDefault();
+                const form = elements.loginForm;
+                const email = form.querySelector('input[type="email"]').value;
+
+                if (!email) {
+                    helpers.showMessage(form, 'Please enter your email address.');
+                    return;
+                }
+
+                try {
+                    helpers.setLoading(form, true);
+                    await auth.sendPasswordResetEmail(email);
+                    helpers.showMessage(form, 'Password reset email sent! Check your inbox.', false);
+                } catch (error) {
+                    helpers.showMessage(form, 'Failed to send reset email. Please try again.');
+                } finally {
+                    helpers.setLoading(form, false);
+                }
+            }
+        };
+
+        // Event Listeners
+        elements.loginForm.addEventListener('submit', handlers.handleLogin);
+        elements.registerForm.addEventListener('submit', handlers.handleRegister);
+        elements.goToRegister.addEventListener('click', (e) => {
+            e.preventDefault();
+            helpers.toggleForms(true);
+        });
+        elements.goToLogin.addEventListener('click', (e) => {
+            e.preventDefault();
+            helpers.toggleForms(false);
+        });
+        elements.forgotPassword.addEventListener('click', handlers.handleForgotPassword);
+
+        // Auth State Observer
+        auth.onAuthStateChanged((user) => {
+            if (user && user.emailVerified) {
+                window.location.href = '/index.html';
+            }
         });
     </script>
 </body>
