@@ -336,7 +336,7 @@
 
                     helpers.showMessage(form, 'Login successful! Redirecting...', false);
                     setTimeout(() => {
-                        window.location.href = '/dashboard.html';
+                        window.location.href = '/index.html';
                     }, 1500);
 
                 } catch (error) {
@@ -443,10 +443,12 @@
 
         // Auth State Observer
         auth.onAuthStateChanged((user) => {
-            if (user && user.emailVerified) {
-                window.location.href = '/index.html';
+            if (user && user.emailVerified && sessionStorage.getItem("isLoggingIn")) {
+                sessionStorage.removeItem("isLoggingIn"); 
+                window.location.href = '/index.html'; 
             }
         });
+
     </script>
 </body>
 </html>
